@@ -1,6 +1,6 @@
-console.log("Bot startet...");
+console.log("Bot started...");
 
-require('dotenv').config(); // <-- Umgebungsvariablen laden
+require('dotenv').config(); // <-- Load environment variables
 
 const { Client, GatewayIntentBits } = require('discord.js');
 const axios = require('axios');
@@ -16,10 +16,10 @@ const client = new Client({
   ],
 });
 
-let alerts = {}; // Speichert Alerts als { tokenAddress: marketCapThreshold }
+let alerts = {}; // Stores alerts as { tokenAddress: marketCapThreshold }
 
 client.once('ready', () => {
-  console.log(`[BOT] Eingeloggt als ${client.user.tag}`);
+  console.log(`[BOT] Logged in as ${client.user.tag}`);
 });
 
 client.on('messageCreate', async (message) => {
@@ -28,19 +28,19 @@ client.on('messageCreate', async (message) => {
 
   const args = message.content.split(' ');
   if (args.length !== 3) {
-    message.channel.send('Nutze: !alert <TokenAdresse> <MarketCap>');
+    message.channel.send('Usage: !alert <TokenAddress> <MarketCap>');
     return;
   }
 
   const token = args[1].toLowerCase();
   const marketCapLimit = Number(args[2]);
   if (isNaN(marketCapLimit)) {
-    message.channel.send('Bitte gib eine gültige Zahl für MarketCap an.');
+    message.channel.send('Please provide a valid number for MarketCap.');
     return;
   }
 
   alerts[token] = marketCapLimit;
-  message.channel.send(`Alert gesetzt für Token ${token} bei MarketCap >= ${marketCapLimit}`);
+  message.channel.send(`Alert set for ${token} when MarketCap >= ${marketCapLimit}`);
 });
 
 setInterval(async () => {
@@ -52,17 +52,16 @@ setInterval(async () => {
       if (marketCap >= alerts[token]) {
         const channel = await client.channels.fetch(CHANNEL_ID);
         if (channel) {
-          channel.send(`⚠️ MarketCap Alert: Token ${token} hat die Grenze von ${alerts[token]} USD erreicht (aktuell: ${marketCap} USD)`);
+          channel.send(`⚠️ MarketCap Alert: Token ${token} has reached the threshold of ${alerts[token]} USD (current: ${marketCap} USD)`);
           delete alerts[token];
         }
       }
     } catch (error) {
-      console.error('Fehler beim Abrufen der Marketcap:', error.message);
+      console.error('Error fetching MarketCap:', error.message);
     }
   }
 }, 60000);
 
 client.login(DISCORD_TOKEN).catch(err => {
-  console.error('Fehler beim Login:', err);
+  console.error('Login error:', err);
 });
-
